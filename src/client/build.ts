@@ -1,5 +1,6 @@
-import { BlockType, Level } from '../shared/level';
-import { canvas, step, ctx, renderLevel, renderGrid, getColor } from './canvas';
+import { Block, BlockType, genBlock } from '../shared/blocks';
+import { Level } from '../shared/level';
+import { canvas, step, ctx, renderLevel, renderGrid } from './canvas';
 import { SCALE, t, TILE, time } from './const';
 import { Camera, Entity } from './entity';
 import { uploadLevel, uploadLevelTemp } from './sockets';
@@ -102,10 +103,17 @@ const render = () => {
   ctx.fill();
 
   // Ghost Block (On cursor)
-  ctx.beginPath();
-  ctx.fillStyle = shade(getColor(selectedBlock, mouseBlockX, mouseBlockY), -15) + '99'; // 99 alpha (hexadecimal)
-  ctx.rect(cx(mouseBlockX * TILE), cy(mouseBlockY * TILE), TILE, TILE);
-  ctx.fill();
+  let style = genBlock(mouseBlockX, mouseBlockY, selectedBlock).getStyle();
+  if (style instanceof HTMLImageElement) {
+    ctx.globalAlpha = 0.5;
+    ctx.drawImage(style, cx(mouseBlockX * TILE), cy(mouseBlockY * TILE), TILE, TILE);
+    ctx.globalAlpha = 1;
+  } else {
+    ctx.beginPath();
+    ctx.fillStyle = shade(style, -15) + '99'; // 99 alpha (hexadecimal)
+    ctx.rect(cx(mouseBlockX * TILE), cy(mouseBlockY * TILE), TILE, TILE);
+    ctx.fill();
+  }
 
   renderGrid(level, camera);
 };
@@ -159,23 +167,37 @@ const palette = document.getElementById('palette') as HTMLElement;
 let blockDivs: HTMLElement[] = [];
 
 for (let b in BlockType) {
+  /* typescript loops through the enum twice: one with the index, and one with the name
+   * for example: 0, 1, 2, Platform, Item, None
+   * We only want the index, not the name */
+  if (isNaN(Number(b))) break;
+
+  const blockNum = parseInt(b);
+  const blockName = BlockType[b];
+
   let div = document.createElement('div');
 
-  const bt: BlockType = BlockType[b as keyof typeof BlockType] as BlockType; // yikes
-  div.classList.add('block', bt);
-  div.style.background = getColor(bt, 0, 0);
+  div.classList.add('block', blockName);
+
+  console.log(genBlock(0, 0, blockNum));
+
+  let style = genBlock(0, 0, blockNum).getStyle();
+
+  if (style instanceof HTMLImageElement) div.style.background = `url('${style.src}')`;
+  else div.style.background = style;
 
   div.onclick = () => {
-    selectedBlock = bt;
+    selectedBlock = BlockType[blockName as keyof typeof BlockType]; // yikes
     updateBlockDivs();
   };
+
   blockDivs.push(div);
   palette.appendChild(div);
 }
 
 const updateBlockDivs = () => {
   blockDivs.forEach((d) => {
-    if (d.classList.contains(selectedBlock)) d.classList.add('selected');
+    if (d.classList.contains(BlockType[selectedBlock].toString())) d.classList.add('selected');
     else d.classList.remove('selected');
   });
 };

@@ -1,9 +1,8 @@
+import { Block, BlockType, genBlock } from "./blocks";
+
 export const MAP = { w: 35, h: 25 };
 
-export enum BlockType {
-  Platform = 'platform',
-  None = 'none',
-}
+
 
 export class Level {
   rows: Row[];
@@ -30,13 +29,13 @@ export class Level {
     x = Math.floor(x);
     y = Math.floor(y);
 
-    if (y >= this.rows.length) return new Block(BlockType.None, x, y);
-    if (y < 0 || x < 0) return new Block(BlockType.Platform, x, y);
+    if (y >= this.rows.length) return genBlock(x, y, BlockType.None);
+    if (y < 0 || x < 0) return genBlock(x, y, BlockType.Platform);
 
     let row = this.rows[y];
-    if (x >= row.blocks.length) return new Block(BlockType.Platform, x, y);
+    if (x >= row.blocks.length) return genBlock(x, y, BlockType.Platform);
 
-    return new Block(row.blocks[x].type, row.blocks[x].x, row.blocks[x].y); // idk sometimes it returns an object so now I have to fix it
+    return genBlock(row.blocks[x].x, row.blocks[x].y, row.blocks[x].type); // idk sometimes it returns an object so now I have to fix it
   }
 }
 
@@ -54,26 +53,10 @@ export class Row {
   }
 
   setBlock(index: number, block: BlockType) {
-    this.blocks[index] = new Block(block, index, this.y);
+    this.blocks[index] = genBlock(index, this.y, block);
   }
 
   fill(block: BlockType) {
-    for (let i = 0; i < this.size; i++) this.blocks[i] = new Block(block, i, this.y);
-  }
-}
-
-export class Block {
-  type: BlockType;
-  x: number;
-  y: number;
-
-  constructor(type: BlockType, x: number, y: number) {
-    this.type = type;
-    this.x = x;
-    this.y = y;
-  }
-
-  passable() {
-    return this.type !== BlockType.Platform;
+    for (let i = 0; i < this.size; i++) this.blocks[i] = genBlock(i, this.y, block);
   }
 }

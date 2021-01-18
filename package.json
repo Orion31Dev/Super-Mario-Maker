@@ -4,12 +4,13 @@
   "author": "Ryan Salik",
   "private": "true",
   "scripts": {
-    "build": "del dist && webpack --mode development",
+    "build": "RMDIR dist /S /Q && webpack --mode development",
     "start": "nodemon ./dist/server.js"
   },
   "dependencies": {
     "@babel/plugin-transform-block-scoping": "^7.12.12",
     "@types/node": "^14.14.20",
+    "copy-webpack-plugin": "^7.0.0",
     "express": "^4.17.1",
     "fpsmeter": "^0.3.1",
     "nodemon": "^2.0.7",

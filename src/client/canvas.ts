@@ -1,4 +1,4 @@
-import { BlockType, Level, MAP } from '../shared/level';
+import { Level, MAP } from '../shared/level';
 import { cx, cy, SCALE, TILE } from './const';
 import { Camera } from './entity';
 
@@ -28,11 +28,17 @@ export const renderLevel = (level: Level, camera: Camera) => {
     for (let y = 0; y < level.sizeY; y++) {
       if ((y + 1) * TILE < camera.y - camera.hh || y * TILE > camera.y + camera.hh) continue;
 
-      ctx.beginPath();
-      ctx.rect(cx(x * TILE, camera), cy(y * TILE, camera), TILE, TILE);
-      ctx.fillStyle = ctx.strokeStyle = getColor(level.rows[y].blocks[x].type, x, y);
-      ctx.fill();
-      ctx.stroke();
+      let style = level.at(x, y).getStyle();
+
+      if (style instanceof HTMLImageElement) {
+        ctx.drawImage(style, cx(x * TILE, camera), cy(y * TILE, camera), TILE, TILE);
+      } else {
+        ctx.beginPath();
+        ctx.rect(cx(x * TILE, camera), cy(y * TILE, camera), TILE, TILE);
+        ctx.fillStyle = ctx.strokeStyle = style;
+        ctx.fill();
+        ctx.stroke();
+      }
     }
   }
 };
@@ -50,14 +56,4 @@ export const renderGrid = (level: Level, camera: Camera) => {
       ctx.stroke();
     }
   }
-};
-
-const blockColors: { [key: string]: string } = {
-  [BlockType.None]: '#55ddff',
-  [BlockType.Platform]: '#55ff55:#33bb33',
-};
-
-export const getColor = (type: BlockType, x: number, y: number) => {
-  if (type === BlockType.Platform) return blockColors[BlockType.Platform].split(':')[(x + y) % 2];
-  return blockColors[type];
 };

@@ -1,9 +1,7 @@
-import { platform } from 'os';
-import { on } from 'process';
-import { debug } from 'webpack';
-import { Block, BlockType, Level } from '../shared/level';
+import { Block, BlockType } from '../shared/blocks';
+import { Level } from '../shared/level';
 import { canvas, ctx, height, width } from './canvas';
-import { AABB, Direction, Ray, raycast } from './collision';
+import { Direction, Ray, raycast } from './collision';
 import { ACCEL, clamp, cx, cy, DEBUG_DRAW_COLLISION_TRACERS, FRICTION, GRAVITY, IMPULSE, MAXDX, MAXDY, t, TILE } from './const';
 
 export class Entity {
@@ -162,7 +160,7 @@ export class Entity {
 
     if (DEBUG_DRAW_COLLISION_TRACERS) {
       blocks.forEach((b) => {
-        aabbQueue.push(new AABB(b.x * TILE, b.y * TILE, TILE, TILE));
+        blockQueue.push(b);
       });
     }
 
@@ -235,7 +233,7 @@ export class Camera extends Entity {
 // DEBUG
 export let debugDistances: { left: number; right: number; bottom: number; top: number };
 export let rayQueue: Ray[] = [];
-export let aabbQueue: (AABB | Block)[] = [];
+export let blockQueue: Block[] = [];
 export function flushDebugDrawQueues(camera: Camera) {
   if (debugDistances.left === Infinity) debugDistances.left = 10000;
   if (debugDistances.right === Infinity) debugDistances.right = 10000;
@@ -271,7 +269,7 @@ export function flushDebugDrawQueues(camera: Camera) {
     ctx.stroke();
   });
 
-  aabbQueue.forEach((b) => {
+  blockQueue.forEach((b) => {
     ctx.beginPath();
     ctx.rect(cx(b.x, camera), cy(b.y, camera), TILE, TILE);
     ctx.strokeStyle = '#000000';
@@ -280,6 +278,6 @@ export function flushDebugDrawQueues(camera: Camera) {
   });
 
   rayQueue = [];
-  aabbQueue = [];
+  blockQueue = [];
 }
 // END DEBUG

@@ -1,6 +1,6 @@
-import { Block } from '../shared/level';
+import { Block } from '../shared/blocks';
 import { DEBUG_DRAW_COLLISION_TRACERS, TILE } from './const';
-import { aabbQueue, rayQueue } from './entity';
+import { blockQueue, rayQueue } from './entity';
 
 export enum Direction {
   UP = 'up',
@@ -20,19 +20,6 @@ export class Ray {
   }
 }
 
-// AABB is defined by its top-left corner, width and height.
-export class AABB {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  constructor(x: number, y: number, w: number, h: number) {
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-  }
-}
 
 function compareInterval(value: number, low: number, high: number) {
   // This shouldn't necessarily be required, but it allows us to just specify
@@ -53,13 +40,13 @@ function compareInterval(value: number, low: number, high: number) {
   }
 }
 
-function intersect(ray: Ray, aabb: AABB) {
+function intersect(ray: Ray, block: Block) {
   switch (ray.direction) {
     case Direction.UP:
-      if (ray.origin.y >= aabb.y + aabb.h) {
-        if (compareInterval(ray.origin.x, aabb.x, aabb.x + aabb.w) == 0) {
-          if (DEBUG_DRAW_COLLISION_TRACERS) aabbQueue.push(aabb);
-          return { x: ray.origin.x, y: aabb.y + aabb.h };
+      if (ray.origin.y >= block.y + TILE) {
+        if (compareInterval(ray.origin.x, block.x, block.x + TILE) == 0) {
+          if (DEBUG_DRAW_COLLISION_TRACERS) blockQueue.push(block);
+          return { x: ray.origin.x, y: block.y + TILE };
         } else {
           return null;
         }
@@ -67,10 +54,10 @@ function intersect(ray: Ray, aabb: AABB) {
         return null;
       }
     case Direction.DOWN:
-      if (ray.origin.y <= aabb.y) {
-        if (compareInterval(ray.origin.x, aabb.x, aabb.x + aabb.w) == 0) {
-          if (DEBUG_DRAW_COLLISION_TRACERS) aabbQueue.push(aabb);
-          return { x: ray.origin.x, y: aabb.y };
+      if (ray.origin.y <= block.y) {
+        if (compareInterval(ray.origin.x, block.x, block.x + TILE) == 0) {
+          if (DEBUG_DRAW_COLLISION_TRACERS) blockQueue.push(block);
+          return { x: ray.origin.x, y: block.y };
         } else {
           return null;
         }
@@ -78,10 +65,10 @@ function intersect(ray: Ray, aabb: AABB) {
         return null;
       }
     case Direction.LEFT:
-      if (ray.origin.x >= aabb.x + aabb.w) {
-        if (compareInterval(ray.origin.y, aabb.y, aabb.y + aabb.h) == 0) {
-          if (DEBUG_DRAW_COLLISION_TRACERS) aabbQueue.push(aabb);
-          return { x: aabb.x + aabb.w, y: ray.origin.y };
+      if (ray.origin.x >= block.x + TILE) {
+        if (compareInterval(ray.origin.y, block.y, block.y + TILE) == 0) {
+          if (DEBUG_DRAW_COLLISION_TRACERS) blockQueue.push(block);
+          return { x: block.x + TILE, y: ray.origin.y };
         } else {
           return null;
         }
@@ -89,10 +76,10 @@ function intersect(ray: Ray, aabb: AABB) {
         return null;
       }
     case Direction.RIGHT:
-      if (ray.origin.x <= aabb.x) {
-        if (compareInterval(ray.origin.y, aabb.y, aabb.y + aabb.h) == 0) {
-          if (DEBUG_DRAW_COLLISION_TRACERS) aabbQueue.push(aabb);
-          return { x: aabb.x, y: ray.origin.y };
+      if (ray.origin.x <= block.x) {
+        if (compareInterval(ray.origin.y, block.y, block.y + TILE) == 0) {
+          if (DEBUG_DRAW_COLLISION_TRACERS) blockQueue.push(block);
+          return { x: block.x, y: ray.origin.y };
         } else {
           return null;
         }
@@ -109,11 +96,10 @@ function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
 export function raycast(ray: Ray, colliders: Block[]) {
   var collisions = colliders
     .map(function (block) {
-      let aabb = new AABB(block.x * TILE, block.y * TILE, TILE, TILE);
       var result = {
-        collider: aabb,
-        intersection: intersect(ray, aabb),
-        distance: 0,
+        collider: block,
+        intersection: intersect(ray, block),
+        distance: Infinity,
       };
 
       if (result.intersection) {

@@ -1,4 +1,5 @@
-import { BlockType, Level } from '../shared/level';
+import { BlockType } from '../shared/blocks';
+import { Level } from '../shared/level';
 import { canvas, step, ctx, renderLevel, renderGrid } from './canvas';
 import { DEBUG_DRAW_COLLISION_TRACERS, SCALE, TILE, time } from './const';
 import { Camera, Entity, flushDebugDrawQueues } from './entity';
@@ -6,8 +7,6 @@ import { getLevel } from './sockets';
 
 let dt = 0,
   last = 0;
-
-export let selectedBlock = BlockType.Platform;
 
 let level = new Level();
 getLevel((l: Level) => {

@@ -1,7 +1,12 @@
 const path = require('path');
 const nodeExternals = require('webpack-node-externals');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
+
 module.exports = [
+  // -------------------------
+  // -------- SERVER ---------
+  // -------------------------
   {
     watch: true,
     entry: {
@@ -31,6 +36,9 @@ module.exports = [
       ],
     },
   },
+  // --------------------------
+  // --------- BUILD ----------
+  // --------------------------
   {
     watch: true,
     entry: {
@@ -53,19 +61,19 @@ module.exports = [
           },
         },
         {
+          test: /\.(svg)$/i,
+          type: 'asset/resource',
+        },
+        {
           // Loads the javacript into html template provided.
           // Entry point is set below in HtmlWebPackPlugin in Plugins
           test: /\.html$/,
           use: ['html-loader'],
         },
         {
-          test: /\.css$/i, // I have given up on trying to get webpack to copy fonts lol
+          test: /\.css$/i,
           use: ['file-loader'],
         },
-        {
-          test: /\.(png|svg|jpg|jpeg|gif)$/i,
-          type: 'asset/resource',
-        }
       ],
     },
     resolve: {
@@ -75,9 +83,35 @@ module.exports = [
       new HtmlWebpackPlugin({
         filename: 'build.html',
         template: 'src/client/public/build.html',
-      })
+      }),
     ],
   },
+  // -------------------------
+  // -------- STATIC ---------
+  // -------------------------
+  {
+    watch: true,
+    target: 'web',
+    module: {
+      rules: [
+        {
+          test: /\.(png|svg|jpg|jpeg|gif|ttf)$/i,
+          type: 'asset/resource',
+        },
+      ],
+    },
+    plugins: [
+      new CopyPlugin({
+        patterns: [
+          { from: 'src/client/public/images', to: 'images' },
+          { from: 'src/client/public/fonts', to: 'fonts' },
+        ],
+      }),
+    ],
+  },
+  // -------------------------
+  // --------- PLAY ----------
+  // -------------------------
   {
     watch: true,
     entry: {
@@ -106,13 +140,9 @@ module.exports = [
           use: ['html-loader'],
         },
         {
-          test: /\.css$/i, // I have given up on trying to get webpack to copy fonts lol
+          test: /\.css$/i,
           use: ['file-loader'],
         },
-        {
-          test: /\.(png|svg|jpg|jpeg|gif)$/i,
-          type: 'asset/resource',
-        }
       ],
     },
     resolve: {
@@ -122,7 +152,7 @@ module.exports = [
       new HtmlWebpackPlugin({
         filename: 'play.html',
         template: 'src/client/public/play.html',
-      })
+      }),
     ],
   },
 ];

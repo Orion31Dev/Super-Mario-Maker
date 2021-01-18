@@ -3,7 +3,7 @@ import { Camera } from './entity';
 export const DEBUG_DRAW_COLLISION_TRACERS = false;
 
 export const SCALE = 3;
-export const TILE = Math.max(window.innerWidth / 30, window.innerHeight / 30) * SCALE;
+export const TILE = Math.max(window.innerWidth / 30, window.innerHeight / 15) * SCALE;
 
 export const GRAVITY = 0.5 * TILE, // default gravity
   MAXDX = 5 * TILE,
@@ -33,5 +33,12 @@ export const t = (pos: number) => {
 
 export const clamp = (num: number, max: number) => {
   if (Math.abs(num) > max) return max * Math.sign(num);
+  return num;
+}
+
+export const bound = (num: number, min: number, max: number) => {
+  if (num > max) return max;
+  if (num < min) return min;
+
   return num;
 }

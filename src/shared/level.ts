@@ -1,6 +1,6 @@
 import { Block, BlockType, genBlock } from "./blocks";
 
-export const MAP = { w: 35, h: 25 };
+export const MAP = { w: 35, h: 17 };
 
 
 
@@ -10,12 +10,15 @@ export class Level {
   sizeX: number;
   playerX: number;
   playerY: number;
+  code: string;
 
   constructor() {
     this.sizeY = MAP.h;
     this.sizeX = MAP.w;
     this.playerX = 5;
     this.playerY = 10;
+
+    this.code = "";
 
     this.rows = [];
     for (let i = 0; i < this.sizeY; i++) this.rows[i] = new Row(this.sizeX, i);
@@ -35,7 +38,7 @@ export class Level {
     let row = this.rows[y];
     if (x >= row.blocks.length) return genBlock(x, y, BlockType.Platform);
 
-    return genBlock(row.blocks[x].x, row.blocks[x].y, row.blocks[x].type); // idk sometimes it returns an object so now I have to fix it
+    return genBlock(row.blocks[x].x, row.blocks[x].y, row.blocks[x].type); // idk sometimes it returns an object and not a block
   }
 }
 

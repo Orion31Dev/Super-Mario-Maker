@@ -1,7 +1,7 @@
 import { Block, BlockType, genBlock } from '../shared/blocks';
 import { Level } from '../shared/level';
 import { canvas, step, ctx, renderLevel, renderGrid } from './canvas';
-import { SCALE, t, TILE, time } from './const';
+import { bound, clamp, SCALE, t, TILE, time } from './const';
 import { Camera, Entity } from './entity';
 import { uploadLevel, uploadLevelTemp } from './sockets';
 
@@ -18,7 +18,7 @@ let camera = new Camera();
 let player = new Entity();
 
 player.x = 4 * TILE;
-player.y = 22 * TILE;
+player.y = 14 * TILE;
 camera.x = player.x;
 camera.y = player.y;
 
@@ -66,6 +66,10 @@ const updateMouseCoords = () => {
   mouseY = (realMouseY - rect.top) * SCALE + camera.y - camera.hh;
   mouseBlockX = t(mouseX);
   mouseBlockY = t(mouseY);
+
+  mouseBlockX = bound(mouseBlockX, 0, level.sizeX - 1);
+  mouseBlockY = bound(mouseBlockY, 0, level.sizeY - 1);
+
   coords.innerHTML = `(${mouseBlockX}, ${mouseBlockY})`;
 
   if (mousedown) {

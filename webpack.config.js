@@ -86,6 +86,56 @@ module.exports = [
       }),
     ],
   },
+  // --------------------------
+  // --------- INDEX ----------
+  // --------------------------
+  {
+    watch: true,
+    entry: {
+      index: './src/client/index.ts',
+    },
+    output: {
+      path: path.join(__dirname, '/dist'),
+      filename: '[name].js',
+      publicPath: '',
+    },
+    target: 'web',
+    module: {
+      rules: [
+        {
+          // Transpiles ES6-8 into ES5
+          test: /\.ts$/,
+          exclude: /node_modules/,
+          use: {
+            loader: 'babel-loader',
+          },
+        },
+        {
+          test: /\.(svg)$/i,
+          type: 'asset/resource',
+        },
+        {
+          // Loads the javacript into html template provided.
+          // Entry point is set below in HtmlWebPackPlugin in Plugins
+          test: /\.html$/,
+          use: ['html-loader'],
+        },
+        {
+          test: /\.css$/i,
+          use: ['file-loader'],
+        },
+      ],
+    },
+    resolve: {
+      extensions: ['.ts', '.js'],
+    },
+    plugins: [
+      new HtmlWebpackPlugin({
+        filename: 'index.html',
+        template: 'src/client/public/index.html',
+      }),
+    ],
+  },
   // -------------------------
   // -------- STATIC ---------
   // -------------------------

@@ -1,9 +1,11 @@
 import { BlockType } from '../shared/blocks';
 import { Level } from '../shared/level';
 import { canvas, step, ctx, renderLevel, renderGrid } from './canvas';
-import { DEBUG_DRAW_COLLISION_TRACERS, SCALE, TILE, time } from './const';
+import { DEBUG_DRAW_COLLISION_TRACERS, TILE, time } from './const';
 import { Camera, Entity, flushDebugDrawQueues } from './entity';
 import { getLevel } from './sockets';
+
+const endScreen = document.getElementById('end-screen');
 
 let dt = 0,
   last = 0;
@@ -16,19 +18,25 @@ getLevel((l: Level) => {
 let camera = new Camera();
 let player = new Entity();
 
+const alive = true;
+
 player.x = 4 * TILE;
-player.y = 22 * TILE;
+player.y = 14 * TILE;
 camera.x = player.x;
 camera.y = player.y;
 
 const frame = () => {
   const now = time();
-  dt = dt + Math.min(1, (now - last) / 1000); // Deltatime
-  while (dt > step) {
-    dt = dt - step;
-    update(step);
+
+  if (alive) {
+    dt = dt + Math.min(1, (now - last) / 1000); // Deltatime
+    while (dt > step) {
+      dt = dt - step;
+      update(step);
+    }
+    render();
   }
-  render();
+
   last = now;
 
   requestAnimationFrame(frame);
@@ -54,7 +62,11 @@ const render = () => {
   if (DEBUG_DRAW_COLLISION_TRACERS) flushDebugDrawQueues(camera);
 };
 
-requestAnimationFrame(frame);
+const endGame = () => {
+  
+}
+
+requestAnimationFrame(frame); // start first frame
 
 const cx = (x: number) => {
   return x - camera.x + camera.hw;

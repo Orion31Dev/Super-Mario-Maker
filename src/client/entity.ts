@@ -1,7 +1,7 @@
 import { Block, BlockType } from '../shared/blocks';
 import { Level } from '../shared/level';
 import { canvas, ctx, height, width } from './canvas';
-import { Direction, Ray, raycast } from './collision';
+import { AABB, Direction, Ray, raycast } from './collision';
 import { ACCEL, clamp, cx, cy, DEBUG_DRAW_COLLISION_TRACERS, FRICTION, GRAVITY, IMPULSE, MAXDX, MAXDY, t, TILE } from './const';
 
 export class Entity {
@@ -39,7 +39,7 @@ export class Entity {
 
   update(dt: number, level: Level) {
     let ddx = this.dx,
-      ddy = this.dy + GRAVITY;
+      ddy = this.dy + (this.omnipotent ? 0 : GRAVITY);
 
     let movingRight = ddx > 0,
       movingLeft = ddx < 0;
@@ -56,8 +56,25 @@ export class Entity {
       if (ddx > 0) ddx = 0; // Prevent Friction from starting Entity moving the wrong way
     }
 
-    ddx = clamp(ddx, MAXDX);
-    ddy = clamp(ddy, MAXDY);
+    if (this.omnipotent) {
+      let movingDown = ddy > 0,
+        movingUp = ddy < 0;
+
+      if (this.down) ddy += this.accel;
+      else if (movingDown) {
+        ddy -= this.friction;
+        if (ddy < 0) ddy = 0; // Prevent Friction from starting Entity moving the wrong way
+      }
+
+      if (this.up) ddy -= this.accel;
+      else if (movingUp) {
+        ddy += this.friction;
+        if (ddy > 0) ddy = 0; // Prevent Friction from starting Entity moving the wrong way
+      }
+    }
+
+    ddx = clamp(ddx, this.maxdx);
+    ddy = clamp(ddy, this.maxdy);
 
     // Control for deltatime when changing axis
     // We don't want this in cases of collsions, because the Entity will travel the exact distance to the collision
@@ -70,7 +87,7 @@ export class Entity {
       let xs = Math.sign(ddx);
       let ys = Math.sign(ddy);
 
-      this.onGround = distances.bottom < .1 && this.dy !== -IMPULSE;
+      this.onGround = distances.bottom < 0.1 && this.dy !== -IMPULSE;
 
       if (xs > 0) {
         if (Math.abs(ddx * dt) > distances.right) {
@@ -84,9 +101,9 @@ export class Entity {
         }
       }
 
-      // Erase upward moment if hitting ceiling
       if (distances.top === 0) {
-        ddy = GRAVITY;
+        // Erase upward moment if hitting ceiling
+        ddy = distances.bottom > 0 ? GRAVITY : 0;
       } else if (ys > 0) {
         if (Math.abs(ddy * dt) > distances.bottom) {
           yDt = false;
@@ -115,7 +132,7 @@ export class Entity {
   }
 
   getCollisions(level: Level) {
-    var off = 10;
+    var off = 1;
 
     var leftRays = [
       new Ray(this.x, this.y + off, Direction.LEFT), // top left
@@ -155,12 +172,12 @@ export class Entity {
     ];
 
     blocks = blocks.filter((b) => {
-      return b.type === BlockType.Platform;
+      return !b.passable();
     });
 
     if (DEBUG_DRAW_COLLISION_TRACERS) {
       blocks.forEach((b) => {
-        blockQueue.push(b);
+        //blockQueue.push(b);
       });
     }
 
@@ -171,8 +188,6 @@ export class Entity {
       bottom: bottomRays.map((r) => raycast(r, blocks)).filter((r) => r),
     };
 
-    // And calculate distances to the closest wall in each direction.
-    // If there is no collision, the distance will be `null`, which will come in handy.
     let distances = {
       left: Math.min(...collisions.left.map((x) => x.distance)),
       right: Math.min(...collisions.right.map((x) => x.distance)),
@@ -201,11 +216,11 @@ export class Camera extends Entity {
     this.hw = this.width / 2;
     this.hh = this.height / 2;
     this.follow = null;
-    this.accel = ACCEL;
-    this.friction = FRICTION;
 
-    this.maxdx = MAXDX / 2;
-    this.maxdy = MAXDX / 2;
+    this.maxdx = this.maxdy = MAXDX * 2;
+    
+    this.accel = this.maxdx;
+    this.friction = this.maxdx;
 
     this.omnipotent = true;
   }
@@ -233,7 +248,7 @@ export class Camera extends Entity {
 // DEBUG
 export let debugDistances: { left: number; right: number; bottom: number; top: number };
 export let rayQueue: Ray[] = [];
-export let blockQueue: Block[] = [];
+export let aabbQueue: AABB[] = [];
 export function flushDebugDrawQueues(camera: Camera) {
   if (debugDistances.left === Infinity) debugDistances.left = 10000;
   if (debugDistances.right === Infinity) debugDistances.right = 10000;
@@ -265,19 +280,19 @@ export function flushDebugDrawQueues(camera: Camera) {
         break;
     }
 
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 10;
     ctx.stroke();
   });
 
-  blockQueue.forEach((b) => {
+  aabbQueue.forEach((b) => {
     ctx.beginPath();
     ctx.rect(cx(b.x, camera), cy(b.y, camera), TILE, TILE);
     ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 10;
     ctx.stroke();
   });
 
   rayQueue = [];
-  blockQueue = [];
+  aabbQueue = [];
 }
 // END DEBUG

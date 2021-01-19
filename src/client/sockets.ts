@@ -3,9 +3,16 @@ import { Level } from '../shared/level';
 
 const socket = io();
 
-export const uploadLevel = (level: Level) => {
-  socket.emit('level', level);
+let saveCallback: Function;
+
+export const saveLevel = (code: string, c: Function) => {
+  socket.emit('save-level', code);
+  saveCallback = c;
 };
+
+socket.on('save-level', (msg: string) => {
+  if (saveCallback) saveCallback(msg);
+});
 
 let levelTempCallback: Function;
 
@@ -15,7 +22,7 @@ export const uploadLevelTemp = (level: Level, c: Function) => {
 };
 
 socket.on('level-tmp', (msg: string) => {
-  levelTempCallback(msg);
+  if (levelTempCallback) levelTempCallback(msg);
 });
 
 let getCallback: Function;
@@ -26,17 +33,17 @@ export const getLevel = (code: string, c: Function) => {
 };
 
 socket.on('level', (msg: any) => {
-  getCallback(Object.assign(new Level(), msg));
+  if (getCallback) getCallback(Object.assign(new Level(), msg));
 });
 
 let checkCallback: Function;
 
 export const levelExists = (code: string, c: Function) => {
   socket.emit('lvl-exists', code);
-  
+
   checkCallback = c;
 };
 
 socket.on('lvl-exists', (msg: boolean) => {
-  checkCallback(msg);
+  if (checkCallback) checkCallback(msg);
 });

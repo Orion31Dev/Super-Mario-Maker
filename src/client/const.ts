@@ -1,6 +1,6 @@
 import { Camera } from './entity';
 
-export const DEBUG_DRAW_COLLISION_TRACERS = true;
+export const DEBUG_DRAW_COLLISION_TRACERS = false;
 
 export const SCALE = 3;
 export const TILE = Math.round(Math.max(window.innerWidth / 30, window.innerHeight / 15) * SCALE);

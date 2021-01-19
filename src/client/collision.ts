@@ -54,6 +54,10 @@ function compareInterval(value: number, low: number, high: number) {
 }
 
 function intersect(ray: Ray, aabb: AABB) {
+  // if ray is in AABB return the ray so that distance will be 0
+  if (ray.origin.x >= aabb.x && ray.origin.x <= aabb.x + aabb.w && ray.origin.y >= aabb.y && ray.origin.y <= aabb.y + aabb.h) return ray.origin;
+
+
   switch (ray.direction) {
     case Direction.UP:
       if (ray.origin.y >= aabb.y + aabb.h) {

@@ -2,6 +2,7 @@ export enum BlockType {
   Platform,
   None,
   Item,
+  Victory,
 }
 
 export class Block {
@@ -19,6 +20,10 @@ export class Block {
 
   getStyle(): string | HTMLImageElement {
     return '#55ddff';
+  }
+
+  getBkgStyle(): null | string {
+    return null;
   }
 
   passable() {
@@ -58,6 +63,28 @@ export class ItemBlock extends Block {
   }
 }
 
+export class VictoryBlock extends Block {
+  constructor(x: number, y: number) {
+    super(x, y);
+    this.type = BlockType.Victory;
+  }
+
+  getStyle() {
+    let img = new Image();
+    img.src = '/images/win.png';
+    img.style.rotate = `${(Date.now() / 30) % 360}`;
+    return img;
+  }
+
+  getBkgStyle() {
+    return '#55ddff';
+  }
+
+  passable() {
+    return true;
+  }
+}
+
 export const genBlock = (x: number, y: number, type: BlockType) => {
   switch (type) {
     case BlockType.Platform:
@@ -66,5 +93,7 @@ export const genBlock = (x: number, y: number, type: BlockType) => {
       return new Block(x, y);
     case BlockType.Item:
       return new ItemBlock(x, y);
+    case BlockType.Victory:
+      return new VictoryBlock(x, y);
   }
 };

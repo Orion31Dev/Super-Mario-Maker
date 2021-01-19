@@ -1,3 +1,4 @@
+import { BlockType } from '../shared/blocks';
 import { Level } from '../shared/level';
 import { canvas, ctx, height, width } from './canvas';
 import { AABB, Direction, Ray, raycast } from './collision';
@@ -20,6 +21,7 @@ export class Entity {
   height: number;
   omnipotent: boolean; // subject to collision and gravity
   onGround: boolean;
+  onWin: Function | null;
 
   constructor() {
     this.x = 0;
@@ -39,13 +41,13 @@ export class Entity {
 
     this.width = TILE;
     this.height = TILE;
+
+    this.onWin = null;
   }
 
   update(dt: number, level: Level) {
     let ddx = this.dx,
       ddy = this.dy + (this.omnipotent ? 0 : GRAVITY);
-
-    console.log(this.y + ' ' + t(this.y));
 
     let movingRight = ddx > 0,
       movingLeft = ddx < 0;
@@ -109,7 +111,6 @@ export class Entity {
 
       if (distances.top === 0) {
         // Erase upward moment if hitting ceiling
-        console.log(distances.bottom);
         ddy = distances.bottom > 0.1 ? GRAVITY : 0;
       } else if (ys > 0) {
         if (Math.abs(ddy * dt) > distances.bottom) {
@@ -159,7 +160,7 @@ export class Entity {
     ];
 
     // prettier-ignore
-    let blocks = [
+    let neighbors = [
       level.at(t(this.x) - 1, t(this.y) - 1),
       level.at(t(this.x),     t(this.y) - 1),
       level.at(t(this.x) + 1, t(this.y) - 1),
@@ -178,21 +179,15 @@ export class Entity {
       level.at(t(this.x) + 2, t(this.y) + 2),
     ];
 
-    blocks = blocks.filter((b) => {
+    let barriers = neighbors.filter((b) => {
       return !b.passable();
     });
 
-    if (DEBUG_DRAW_COLLISION_TRACERS) {
-      blocks.forEach((b) => {
-        //blockQueue.push(b);
-      });
-    }
-
     let collisions = {
-      left: leftRays.map((r) => raycast(r, blocks)).filter((r) => r),
-      right: rightRays.map((r) => raycast(r, blocks)).filter((r) => r),
-      top: topRays.map((r) => raycast(r, blocks)).filter((r) => r),
-      bottom: bottomRays.map((r) => raycast(r, blocks)).filter((r) => r),
+      left: leftRays.map((r) => raycast(r, barriers)).filter((r) => r),
+      right: rightRays.map((r) => raycast(r, barriers)).filter((r) => r),
+      top: topRays.map((r) => raycast(r, barriers)).filter((r) => r),
+      bottom: bottomRays.map((r) => raycast(r, barriers)).filter((r) => r),
     };
 
     let distances = {
@@ -201,6 +196,32 @@ export class Entity {
       top: Math.min(...collisions.top.map((x) => x.distance)),
       bottom: Math.min(...collisions.bottom.map((x) => x.distance)),
     };
+
+    if (this.onWin !== null) {
+      let winBlocks = neighbors.filter((b) => {
+        return b.type === BlockType.Victory;
+      });
+
+      let winCollisions = {
+        left: leftRays.map((r) => raycast(r, winBlocks)).filter((r) => r),
+        right: rightRays.map((r) => raycast(r, winBlocks)).filter((r) => r),
+        top: topRays.map((r) => raycast(r, winBlocks)).filter((r) => r),
+        bottom: bottomRays.map((r) => raycast(r, winBlocks)).filter((r) => r),
+      };
+
+      let winDistances = [
+        Math.min(...winCollisions.left.map((x) => x.distance)),
+        Math.min(...winCollisions.right.map((x) => x.distance)),
+        Math.min(...winCollisions.top.map((x) => x.distance)),
+        Math.min(...winCollisions.bottom.map((x) => x.distance)),
+      ];
+
+      console.log(winDistances[1]);
+
+      if (Math.min(...winDistances) < 7 || level.at(t(this.x), t(this.y)).type === BlockType.Victory) {
+        this.onWin(); 
+      }
+    }
 
     if (DEBUG_DRAW_COLLISION_TRACERS) debugDistances = distances;
 

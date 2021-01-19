@@ -29,9 +29,18 @@ export const renderLevel = (level: Level, camera: Camera) => {
       if ((y + 1) * TILE < camera.y - camera.hh || y * TILE > camera.y + camera.hh) continue;
 
       let style = level.at(x, y).getStyle();
+      let bkgStyle = level.at(x, y).getBkgStyle();
+
+      if (bkgStyle !== null) {
+        ctx.beginPath();
+        ctx.rect(cx(x * TILE, camera), cy(y * TILE, camera), TILE, TILE);
+        ctx.fillStyle = ctx.strokeStyle = bkgStyle;
+        ctx.fill();
+        ctx.stroke();
+      }
 
       if (style instanceof HTMLImageElement) {
-        ctx.drawImage(style, cx(x * TILE, camera), cy(y * TILE, camera), TILE, TILE);
+        imgQueue.push({ img: style, x: cx((x + .5) * TILE, camera), y: cy((y + .5) * TILE, camera), opacity: 1 });
       } else {
         ctx.beginPath();
         ctx.rect(cx(x * TILE, camera), cy(y * TILE, camera), TILE, TILE);
@@ -56,4 +65,38 @@ export const renderGrid = (level: Level, camera: Camera) => {
       ctx.stroke();
     }
   }
+};
+
+export let imgQueue: { img: HTMLImageElement; x: number; y: number, opacity: number }[] = [];
+
+export const renderImages = () => {
+  imgQueue.forEach((o) => {
+    renderImage(o.img, o.x, o.y, TILE, TILE, parseFloat(o.img.style.rotate), o.opacity);
+  });
+
+  imgQueue = [];
+};
+
+export const renderImage = function (image: HTMLImageElement, x: number, y: number, width: number, height: number, angle: number, opacity: number) {
+  const centerX = width / 2.0;
+  const centerY = height / 2.0;
+
+  // save context's current transform state
+  ctx.save();
+
+  ctx.globalAlpha = opacity;
+
+  // move context's origin to image position
+  ctx.translate(x, y);
+
+  // apply transformations
+  ctx.rotate((Math.PI / 180) * angle);
+
+  // draw image centered on its position
+  ctx.drawImage(image, -centerX, -centerY, width, height);
+
+  ctx.globalAlpha = 1;
+
+  // restore context's previous transform state
+  ctx.restore();
 };

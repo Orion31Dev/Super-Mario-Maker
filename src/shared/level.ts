@@ -2,15 +2,12 @@ import { Block, BlockType, genBlock } from "./blocks";
 
 export const MAP = { w: 35, h: 17 };
 
-
-
 export class Level {
   rows: Row[];
   sizeY: number;
   sizeX: number;
   playerX: number;
   playerY: number;
-  code: string;
 
   constructor() {
     this.sizeY = MAP.h;
@@ -18,11 +15,8 @@ export class Level {
     this.playerX = 5;
     this.playerY = 10;
 
-    this.code = "";
-
     this.rows = [];
     for (let i = 0; i < this.sizeY; i++) this.rows[i] = new Row(this.sizeX, i);
-    console.log(this.sizeY);
 
     this.rows[this.sizeY - 1].fill(BlockType.Platform);
     this.rows[this.sizeY - 2].fill(BlockType.Platform);

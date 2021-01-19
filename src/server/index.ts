@@ -40,8 +40,6 @@ io.on('connect', (socket: any) => {
     if (socketTempCodes[socket.id]) code = socketTempCodes[socket.id];
     else code = 'tmp-' + generateCode();
 
-    console.log(code);
-
     tempLevels[code] = msg;
     socket.emit('level-tmp', code);
 
@@ -49,17 +47,23 @@ io.on('connect', (socket: any) => {
   });
 
   socket.on('req-lvl', (msg: string) => {
-    if (msg.startsWith('tmp') && tempLevels[msg]) socket.emit('level', tempLevels[msg]);
+    if (msg.startsWith('tmp-') && tempLevels[msg]) socket.emit('level', tempLevels[msg]);
     if (levels[msg]) socket.emit('level', levels[msg]);
   });
 
   socket.on('lvl-exists', (msg: string) => {
-    let bool = (msg.startsWith('tmp') && tempLevels[msg]) || levels[msg] ? true : false;
-    console.log(msg + ' ' + bool);
-
-    if (msg.startsWith('tmp') && tempLevels[msg]) socket.emit('lvl-exists', true);
+    if (msg.startsWith('tmp-') && tempLevels[msg]) socket.emit('lvl-exists', true);
     else if (levels[msg]) socket.emit('lvl-exists', true);
     else socket.emit('lvl-exists', false);
+  });
+
+  socket.on('save-level', (msg: string) => {
+    if (msg.startsWith('tmp-') && tempLevels[msg]) {
+      let code = generateCode();
+
+      levels[code] = tempLevels[msg];
+      socket.emit('save-level', code);
+    }
   });
 });
 
@@ -67,7 +71,7 @@ const generateCode = () => {
   let result = '';
 
   do {
-    let chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZ';
 
     // 5 = length of room code
     for (var i = 5; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];

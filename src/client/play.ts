@@ -1,12 +1,25 @@
 import { BlockType } from '../shared/blocks';
 import { Level } from '../shared/level';
-import { canvas, step, ctx, renderLevel, renderGrid } from './canvas';
-import { animateFlexContainers, DEBUG_DRAW_COLLISION_TRACERS, TILE, time } from './const';
+import { canvas, step, ctx, renderLevel, renderImages } from './canvas';
+import { animateFlexContainers, cx, cy, DEBUG_DRAW_COLLISION_TRACERS, TILE, time } from './const';
 import { Camera, Entity, flushDebugDrawQueues } from './entity';
-import { getLevel, levelExists } from './sockets';
+import { getLevel, levelExists, saveLevel } from './sockets';
 
 const endScreen = document.querySelector('.cont-end') as HTMLElement;
 const invalidScreen = document.querySelector('.cont-inval') as HTMLElement;
+const winScreen = document.querySelector('.cont-win') as HTMLElement;
+
+const uploadButton = document.querySelector('.btn-upload') as HTMLElement;
+uploadButton.onclick = () => {
+  if (code.startsWith('tmp-')) {
+    saveLevel(code, (code: string) => {
+      uploadButton.innerHTML = "Uploaded as " + code;
+      uploadButton.onclick = () => {
+        window.open('/play/' + code, '_blank');
+      }
+    });
+  }
+};
 
 let dt = 0,
   last = 0;
@@ -15,30 +28,15 @@ const code = window.location.href.split('/')[window.location.href.split('/').len
 
 (document.getElementById('code') as HTMLElement).innerHTML = code;
 
-levelExists(code, (b: boolean) => {
-  if (!b) {
-    invalidScreen.classList.add('active');
-    animateFlexContainers();
-  }
-  else playing = true;
-});
-
-let level = new Level();
-getLevel(code, (l: Level) => {
-  level = l;
-});
+if (code.startsWith('tmp-')) uploadButton.classList.add('active');
 
 let camera = new Camera();
 let player = new Entity();
 
-player.width = player.height = TILE * .7;
+player.width = player.height = TILE * 0.7;
 
 let playing = false;
-
-player.x = 4 * TILE;
-player.y = 14 * TILE;
-camera.x = player.x;
-camera.y = player.y;
+let level = new Level();
 
 const frame = () => {
   const now = time();
@@ -68,33 +66,60 @@ const render = () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   renderLevel(level, camera);
+  renderImages();
 
   // Player
   ctx.beginPath();
-  ctx.rect(cx(player.x), cy(player.y), player.width, player.height);
+  ctx.rect(cx(player.x, camera), cy(player.y, camera), player.width, player.height);
   ctx.fillStyle = 'orange';
   ctx.fill();
 
-  //renderGrid(level, camera);
   if (DEBUG_DRAW_COLLISION_TRACERS) flushDebugDrawQueues(camera);
 };
 
 const endGame = () => {
-  endScreen.style.visibility = 'visible';
   playing = false;
 
   animateFlexContainers();
+
+  endScreen.classList.add('visible');
 };
 
+const resetGame = () => {
+  player.x = 4.15 * TILE;
+  player.y = 13.15 * TILE;
+  camera.x = player.x;
+  camera.y = player.y;
+
+  // Check if level exists
+  levelExists(code, (b: boolean) => {
+    if (!b) {
+      invalidScreen.classList.add('active');
+      animateFlexContainers();
+    } else playing = true;
+  });
+
+  // Load level
+  getLevel(code, (l: Level) => {
+    level = l;
+  });
+
+  endScreen.classList.remove('active');
+  winScreen.classList.remove('active');
+};
+
+document.querySelectorAll('#restart, .btn-restart').forEach((b) => b.addEventListener('click', resetGame));
+
+const winGame = () => {
+  playing = false;
+  winScreen.classList.add('active');
+  animateFlexContainers();
+};
+
+player.onWin = winGame;
+
+resetGame();
 requestAnimationFrame(frame); // start first frame
-
-const cx = (x: number) => {
-  return x - camera.x + camera.hw;
-};
-
-const cy = (y: number) => {
-  return y - camera.y + camera.hh;
-};
 
 window.addEventListener('keydown', (e) => {
   switch (e.key) {

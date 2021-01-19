@@ -16,18 +16,28 @@
     <div id="code"></div>
     <div class="ui-section" id="restart"><img src="images/refresh.svg" class="ui-img" alt="restart" />Restart</div>
 
-    <div class="flex-container red cont-end">
+    <div class="flex-container red hidden cont-end">
       <div class="end-screen">
         <div class="title">Game Over!</div>
         <button class="btn-restart">Try Again</button>
-        <button class="btn-home">Home</button>
+        <a href="/"><button class="btn-home">Home</button></a>
       </div>
     </div>
 
-    <div class="flex-container red cont-inval">
+    <div class="flex-container red hidden cont-inval">
       <div class="end-screen">
         <div class="title">Invalid Level Code</div>
         <a href="/"><button class="btn-home">Home</button></a>
+      </div>
+    </div>
+
+    <div class="flex-container hidden cont-win">
+      <div>
+        <div class="title">Course Cleared!</div>
+
+        <button class="btn-restart">Try Again</button>
+        <a href="/"><button class="btn-home">Home</button></a>
+        <button class="btn-upload hidden">Upload</button>
       </div>
     </div>
 

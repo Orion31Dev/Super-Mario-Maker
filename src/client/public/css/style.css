@@ -51,9 +51,12 @@ canvas {
 #palette {
   top: 1vw;
   right: 1vw;
+
+  width: 13vw;
 }
 
 .move-tip {
+  pointer-events: none;
   z-index: 5;
   position: absolute;
   top: 0;
@@ -174,16 +177,23 @@ canvas {
   justify-content: center;
   align-items: center;
 
+  transition: opacity .5s ease-out;
+
   z-index: 10;
 }
 
 .flex-container.red {
   background: #f04a3a;
-  visibility: hidden;
 }
 
-.flex-container.red.active {
+.hidden {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.hidden.active {
   visibility: visible;
+  opacity: 1;
 }
 
 .title {
@@ -242,6 +252,10 @@ input::placeholder {
 
 .cont-inval > div > .title {
   font-size: 8vw;
+}
+
+.Victory {
+  background-color: #55ddff;
 }
 
 #code {

@@ -4,8 +4,8 @@
   "author": "Ryan Salik",
   "private": "true",
   "scripts": {
-    "dev": "RMDIR dist /S /Q && webpack --mode development",
-    "build": "webpack --mode production",
+    "dev": "RMDIR dist /S /Q && webpack --config webpack.dev.js",
+    "build": "webpack --config webpack.prod.js",
     "start": "nodemon ./dist/server.js"
   },
   "dependencies": {

@@ -100,7 +100,7 @@ module.exports = [
       }),
       new CopyPlugin({
         patterns: [
-          { from: 'src/client/public/images', to: 'images' },
+          //{ from: 'src/client/public/images', to: 'images' },
           { from: 'src/client/public/fonts', to: 'fonts' },
         ],
       }),

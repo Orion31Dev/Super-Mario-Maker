@@ -7,14 +7,21 @@ export const uploadLevel = (level: Level) => {
   socket.emit('level', level);
 };
 
-export const uploadLevelTemp = (level: Level) => {
+let levelTempCallback: Function;
+
+export const uploadLevelTemp = (level: Level, c: Function) => {
   socket.emit('level-tmp', level);
+  levelTempCallback = c;
 };
+
+socket.on('level-tmp', (msg: string) => {
+  levelTempCallback(msg);
+});
 
 let getCallback: Function;
 
-export const getLevel = (c: Function) => {
-  socket.emit('req-lvl');
+export const getLevel = (code: string, c: Function) => {
+  socket.emit('req-lvl', code);
   getCallback = c;
 };
 
@@ -25,7 +32,7 @@ socket.on('level', (msg: any) => {
 let checkCallback: Function;
 
 export const levelExists = (code: string, c: Function) => {
-  socket.emit('lvl-exists');
+  socket.emit('lvl-exists', code);
   
   checkCallback = c;
 };

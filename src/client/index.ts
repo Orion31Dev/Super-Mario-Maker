@@ -1,17 +1,22 @@
-import { DEBUG_DRAW_COLLISION_TRACERS } from './const';
+import { animateFlexContainers } from './const';
 import { levelExists } from './sockets';
 
 const input = document.getElementById('level') as HTMLInputElement;
 const play = document.getElementById('btn-play');
-const build = document.getElementById('btn-build');
+
+let code = "";
 
 play?.addEventListener('click', () => {
-  if (/^[a-zA-Z0-9]{5}$/.test(input.value)) levelExists(input.value, existsCallback);
+  if (/^[a-zA-Z0-9]{5}$/.test(input.value)) {
+    levelExists(input.value, existsCallback);
+    code = input.value;
+  } 
   else shakeInput();
 });
 
 const existsCallback = (exists: boolean) => {
   if (!exists) shakeInput();
+  else window.location.href = "/play/" + code;
 };
 
 const shakeInput = () => {
@@ -35,3 +40,5 @@ const shakeInput = () => {
     }
   );
 };
+
+animateFlexContainers();

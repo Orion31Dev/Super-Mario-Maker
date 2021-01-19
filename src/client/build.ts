@@ -234,5 +234,7 @@ function shade(color: string, percent: number) {
 // Play Button
 const play = document.getElementById('play') as HTMLElement;
 play.addEventListener('click', () => {
-  uploadLevelTemp(level);
+  uploadLevelTemp(level, (code: string) => { 
+    window.open(window.location.origin + "/play/" + code, 'smm-tmp-play-' + code);
+  });
 });

@@ -1,4 +1,3 @@
-import { Block, BlockType } from '../shared/blocks';
 import { Level } from '../shared/level';
 import { canvas, ctx, height, width } from './canvas';
 import { AABB, Direction, Ray, raycast } from './collision';
@@ -17,6 +16,8 @@ export class Entity {
   friction: number;
   maxdx: number;
   maxdy: number;
+  width: number;
+  height: number;
   omnipotent: boolean; // subject to collision and gravity
   onGround: boolean;
 
@@ -35,11 +36,16 @@ export class Entity {
     this.maxdy = MAXDY;
     this.omnipotent = false;
     this.onGround = false;
+
+    this.width = TILE;
+    this.height = TILE;
   }
 
   update(dt: number, level: Level) {
     let ddx = this.dx,
       ddy = this.dy + (this.omnipotent ? 0 : GRAVITY);
+
+    console.log(this.y + ' ' + t(this.y));
 
     let movingRight = ddx > 0,
       movingLeft = ddx < 0;
@@ -103,7 +109,8 @@ export class Entity {
 
       if (distances.top === 0) {
         // Erase upward moment if hitting ceiling
-        ddy = distances.bottom > 0 ? GRAVITY : 0;
+        console.log(distances.bottom);
+        ddy = distances.bottom > 0.1 ? GRAVITY : 0;
       } else if (ys > 0) {
         if (Math.abs(ddy * dt) > distances.bottom) {
           yDt = false;
@@ -132,23 +139,23 @@ export class Entity {
   }
 
   getCollisions(level: Level) {
-    var off = 1;
+    var off = 0.001;
 
     var leftRays = [
       new Ray(this.x, this.y + off, Direction.LEFT), // top left
-      new Ray(this.x, this.y + TILE - off, Direction.LEFT), // bottom left
+      new Ray(this.x, this.y + this.height - off, Direction.LEFT), // bottom left
     ];
     var topRays = [
       new Ray(this.x + off, this.y, Direction.UP), // top left
-      new Ray(this.x + TILE - off, this.y, Direction.UP), // top right
+      new Ray(this.x + this.width - off, this.y, Direction.UP), // top right
     ];
     var rightRays = [
-      new Ray(this.x + TILE, this.y + off, Direction.RIGHT), // top right
-      new Ray(this.x + TILE, this.y + TILE - off, Direction.RIGHT), // bottom right
+      new Ray(this.x + this.width, this.y + off, Direction.RIGHT), // top right
+      new Ray(this.x + this.width, this.y + this.height - off, Direction.RIGHT), // bottom right
     ];
     var bottomRays = [
-      new Ray(this.x + off, this.y + TILE, Direction.DOWN), // bottom left
-      new Ray(this.x + TILE - off, this.y + TILE, Direction.DOWN), // bottom right
+      new Ray(this.x + off, this.y + this.height, Direction.DOWN), // bottom left
+      new Ray(this.x + this.width - off, this.y + this.height, Direction.DOWN), // bottom right
     ];
 
     // prettier-ignore
@@ -218,7 +225,7 @@ export class Camera extends Entity {
     this.follow = null;
 
     this.maxdx = this.maxdy = MAXDX * 2;
-    
+
     this.accel = this.maxdx;
     this.friction = this.maxdx;
 

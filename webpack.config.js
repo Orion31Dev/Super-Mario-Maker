@@ -47,7 +47,7 @@ module.exports = [
     output: {
       path: path.join(__dirname, '/dist'),
       filename: '[name].js',
-      publicPath: '',
+      publicPath: '../',
     },
     target: 'web',
     module: {
@@ -170,7 +170,7 @@ module.exports = [
     output: {
       path: path.join(__dirname, '/dist'),
       filename: '[name].js',
-      publicPath: '',
+      publicPath: '../',
     },
     target: 'web',
     module: {
@@ -192,6 +192,10 @@ module.exports = [
         {
           test: /\.css$/i,
           use: ['file-loader'],
+        },
+        {
+          test: /\.(svg)$/i,
+          type: 'asset/resource',
         },
       ],
     },

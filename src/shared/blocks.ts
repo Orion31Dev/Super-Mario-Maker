@@ -49,7 +49,7 @@ export class ItemBlock extends Block {
 
   getStyle() {
     let img = new Image();
-    img.src = './images/questionmark.png'
+    img.src = '/images/questionmark.png'
     return img;
   }
 

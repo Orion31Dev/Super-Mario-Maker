@@ -1,24 +1,39 @@
 import { BlockType } from '../shared/blocks';
 import { Level } from '../shared/level';
 import { canvas, step, ctx, renderLevel, renderGrid } from './canvas';
-import { DEBUG_DRAW_COLLISION_TRACERS, TILE, time } from './const';
+import { animateFlexContainers, DEBUG_DRAW_COLLISION_TRACERS, TILE, time } from './const';
 import { Camera, Entity, flushDebugDrawQueues } from './entity';
-import { getLevel } from './sockets';
+import { getLevel, levelExists } from './sockets';
 
-const endScreen = document.getElementById('end-screen');
+const endScreen = document.querySelector('.cont-end') as HTMLElement;
+const invalidScreen = document.querySelector('.cont-inval') as HTMLElement;
 
 let dt = 0,
   last = 0;
 
+const code = window.location.href.split('/')[window.location.href.split('/').length - 1];
+
+(document.getElementById('code') as HTMLElement).innerHTML = code;
+
+levelExists(code, (b: boolean) => {
+  if (!b) {
+    invalidScreen.classList.add('active');
+    animateFlexContainers();
+  }
+  else playing = true;
+});
+
 let level = new Level();
-getLevel((l: Level) => {
+getLevel(code, (l: Level) => {
   level = l;
 });
 
 let camera = new Camera();
 let player = new Entity();
 
-const alive = true;
+player.width = player.height = TILE * .7;
+
+let playing = false;
 
 player.x = 4 * TILE;
 player.y = 14 * TILE;
@@ -28,7 +43,7 @@ camera.y = player.y;
 const frame = () => {
   const now = time();
 
-  if (alive) {
+  if (playing) {
     dt = dt + Math.min(1, (now - last) / 1000); // Deltatime
     while (dt > step) {
       dt = dt - step;
@@ -45,6 +60,8 @@ const frame = () => {
 const update = (dt: number) => {
   camera.updateAndFollow(dt, level, player);
   player.update(dt, level);
+
+  if (player.y > (level.sizeY + 4) * TILE) endGame();
 };
 
 const render = () => {
@@ -54,7 +71,7 @@ const render = () => {
 
   // Player
   ctx.beginPath();
-  ctx.rect(cx(player.x), cy(player.y), TILE, TILE);
+  ctx.rect(cx(player.x), cy(player.y), player.width, player.height);
   ctx.fillStyle = 'orange';
   ctx.fill();
 
@@ -63,8 +80,11 @@ const render = () => {
 };
 
 const endGame = () => {
-  
-}
+  endScreen.style.visibility = 'visible';
+  playing = false;
+
+  animateFlexContainers();
+};
 
 requestAnimationFrame(frame); // start first frame
 

@@ -28,7 +28,7 @@ socket.on('level-tmp', (msg: string) => {
 let getCallback: Function;
 
 export const getLevel = (code: string, c: Function) => {
-  socket.emit('req-lvl', code);
+  socket.emit('req-lvl', code.toUpperCase());
   getCallback = c;
 };
 
@@ -39,7 +39,7 @@ socket.on('level', (msg: any) => {
 let checkCallback: Function;
 
 export const levelExists = (code: string, c: Function) => {
-  socket.emit('lvl-exists', code);
+  socket.emit('lvl-exists', code.toUpperCase());
 
   checkCallback = c;
 };

@@ -28,7 +28,7 @@ const code = window.location.href.split('/')[window.location.href.split('/').len
 
 (document.getElementById('code') as HTMLElement).innerHTML = code;
 
-if (code.startsWith('tmp-')) uploadButton.classList.add('active');
+if (!code.startsWith('tmp-')) uploadButton.style.visibility = "hidden";
 
 let camera = new Camera();
 let player = new Entity();

@@ -218,7 +218,7 @@ export class Entity {
 
       console.log(winDistances[1]);
 
-      if (Math.min(...winDistances) < 7 || level.at(t(this.x), t(this.y)).type === BlockType.Victory) {
+      if (Math.min(...winDistances) < 0 || level.at(t(this.x), t(this.y)).type === BlockType.Victory) {
         this.onWin(); 
       }
     }

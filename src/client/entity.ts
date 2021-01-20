@@ -198,8 +198,6 @@ export class Entity {
       bottom: Math.min(...collisions.bottom.map((x) => x.distance)),
     };
 
-    if (DEBUG_DRAW_COLLISION_TRACERS) debugDistances = distances;
-
     if (this.onWin !== null) {
       let winBlocks = neighbors.filter((b) => {
         return b.type === BlockType.Victory;
@@ -219,10 +217,14 @@ export class Entity {
         Math.min(...winCollisions.bottom.map((x) => x.distance)),
       ];
 
+      console.log(winDistances);
+
       if (Math.min(...winDistances) <= 1 || level.at(t(this.x), t(this.y)).type === BlockType.Victory) {
         this.onWin();
       }
     }
+
+    if (DEBUG_DRAW_COLLISION_TRACERS) debugDistances = distances;
 
     return distances;
   }

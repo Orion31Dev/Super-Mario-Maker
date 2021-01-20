@@ -32,8 +32,7 @@ const code = window.location.href.split('/')[window.location.href.split('/').len
 
 if (!code.startsWith('tmp-')) uploadButton.style.visibility = 'hidden';
 
-let camera = new Camera();
-let player = new Entity();
+let camera: Camera, player: Entity;
 
 let playing = false;
 let level = new Level();
@@ -89,6 +88,7 @@ const resetGame = () => {
   camera = new Camera();
   player = new Entity();
 
+  player.onWin = winGame;
   player.x = 4.15 * TILE;
   player.y = 13.15 * TILE;
   player.width = player.height = TILE * 0.7;
@@ -98,15 +98,16 @@ const resetGame = () => {
 
   // Check if level exists
   levelExists(code, (b: boolean) => {
+    if (firstLoad) {
+      loadingScreen.style.transform = 'translateY(-100%)';
+      setTimeout(() => loadingScreen.style.visibility = 'hidden', 500);
+      firstLoad = false;
+    }
     if (!b) {
       invalidScreen.classList.add('active');
       animateFlexContainers();
     } else {
       playing = true;
-      if (firstLoad) {
-        loadingScreen.style.transform = 'translateY(-100%);';
-        setTimeout(() => loadingScreen.style.visibility = 'hidden', 500);
-      }
     }
   });
 
@@ -126,7 +127,6 @@ const winGame = () => {
   winScreen.classList.add('active');
   animateFlexContainers();
 };
-player.onWin = winGame;
 
 resetGame();
 requestAnimationFrame(frame); // start first frame

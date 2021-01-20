@@ -258,6 +258,10 @@ input::placeholder {
   background-color: #55ddff;
 }
 
+.cont-loading {
+  transition: transform .5s ease-out;
+}
+
 #code {
   font-size: 1.5vw;
   color: black;

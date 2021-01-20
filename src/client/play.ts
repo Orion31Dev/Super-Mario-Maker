@@ -1,4 +1,3 @@
-import { BlockType } from '../shared/blocks';
 import { Level } from '../shared/level';
 import { canvas, step, ctx, renderLevel, renderImages } from './canvas';
 import { animateFlexContainers, cx, cy, DEBUG_DRAW_COLLISION_TRACERS, TILE, time } from './const';
@@ -8,15 +7,16 @@ import { getLevel, levelExists, saveLevel } from './sockets';
 const endScreen = document.querySelector('.cont-end') as HTMLElement;
 const invalidScreen = document.querySelector('.cont-inval') as HTMLElement;
 const winScreen = document.querySelector('.cont-win') as HTMLElement;
+const loadingScreen = document.querySelector('.cont-loading') as HTMLElement;
 
 const uploadButton = document.querySelector('.btn-upload') as HTMLElement;
 uploadButton.onclick = () => {
   if (code.startsWith('tmp-')) {
     saveLevel(code, (code: string) => {
-      uploadButton.innerHTML = "Uploaded as " + code;
+      uploadButton.innerHTML = 'Uploaded as ' + code;
       uploadButton.onclick = () => {
         window.open('/play/' + code, '_blank');
-      }
+      };
     });
   }
 };
@@ -24,16 +24,16 @@ uploadButton.onclick = () => {
 let dt = 0,
   last = 0;
 
+let firstLoad = true;
+
 const code = window.location.href.split('/')[window.location.href.split('/').length - 1];
 
 (document.getElementById('code') as HTMLElement).innerHTML = code;
 
-if (!code.startsWith('tmp-')) uploadButton.style.visibility = "hidden";
+if (!code.startsWith('tmp-')) uploadButton.style.visibility = 'hidden';
 
 let camera = new Camera();
 let player = new Entity();
-
-player.width = player.height = TILE * 0.7;
 
 let playing = false;
 let level = new Level();
@@ -86,8 +86,13 @@ const endGame = () => {
 };
 
 const resetGame = () => {
+  camera = new Camera();
+  player = new Entity();
+
   player.x = 4.15 * TILE;
   player.y = 13.15 * TILE;
+  player.width = player.height = TILE * 0.7;
+
   camera.x = player.x;
   camera.y = player.y;
 
@@ -96,7 +101,13 @@ const resetGame = () => {
     if (!b) {
       invalidScreen.classList.add('active');
       animateFlexContainers();
-    } else playing = true;
+    } else {
+      playing = true;
+      if (firstLoad) {
+        loadingScreen.style.transform = 'translateY(-100%);';
+        setTimeout(() => loadingScreen.style.visibility = 'hidden', 500);
+      }
+    }
   });
 
   // Load level
@@ -115,7 +126,6 @@ const winGame = () => {
   winScreen.classList.add('active');
   animateFlexContainers();
 };
-
 player.onWin = winGame;
 
 resetGame();

@@ -1,3 +1,4 @@
+import { isForOfStatement } from 'typescript';
 import { BlockType } from '../shared/blocks';
 import { Level } from '../shared/level';
 import { canvas, ctx, height, width } from './canvas';
@@ -197,6 +198,8 @@ export class Entity {
       bottom: Math.min(...collisions.bottom.map((x) => x.distance)),
     };
 
+    if (DEBUG_DRAW_COLLISION_TRACERS) debugDistances = distances;
+
     if (this.onWin !== null) {
       let winBlocks = neighbors.filter((b) => {
         return b.type === BlockType.Victory;
@@ -216,14 +219,10 @@ export class Entity {
         Math.min(...winCollisions.bottom.map((x) => x.distance)),
       ];
 
-      console.log(winDistances[1]);
-
-      if (Math.min(...winDistances) < 0 || level.at(t(this.x), t(this.y)).type === BlockType.Victory) {
-        this.onWin(); 
+      if (Math.min(...winDistances) <= 1 || level.at(t(this.x), t(this.y)).type === BlockType.Victory) {
+        this.onWin();
       }
     }
-
-    if (DEBUG_DRAW_COLLISION_TRACERS) debugDistances = distances;
 
     return distances;
   }
@@ -278,6 +277,7 @@ export let debugDistances: { left: number; right: number; bottom: number; top: n
 export let rayQueue: Ray[] = [];
 export let aabbQueue: AABB[] = [];
 export function flushDebugDrawQueues(camera: Camera) {
+  if (!debugDistances || !debugDistances.left) return;
   if (debugDistances.left === Infinity) debugDistances.left = 10000;
   if (debugDistances.right === Infinity) debugDistances.right = 10000;
   if (debugDistances.top === Infinity) debugDistances.top = 10000;

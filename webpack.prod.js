@@ -9,7 +9,6 @@ module.exports = [
   // -------------------------
   {
     mode: 'production',
-    watch: true,
     entry: {
       server: './src/server/index.ts',
     },

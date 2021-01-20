@@ -5,7 +5,7 @@
   "private": "true",
   "scripts": {
     "dev": "RMDIR dist /S /Q && webpack --config webpack.dev.js",
-    "prod": "webpack --config webpack.prod.js",
+    "build": "webpack --config webpack.prod.js",
     "start": "nodemon ./dist/server.js"
   },
   "dependencies": {

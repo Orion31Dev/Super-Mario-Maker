@@ -82,7 +82,7 @@ const endGame = () => {
 
   animateFlexContainers();
 
-  endScreen.classList.add('visible');
+  endScreen.classList.add('active');
 };
 
 const resetGame = () => {

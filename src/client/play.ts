@@ -26,7 +26,7 @@ let dt = 0,
 
 let firstLoad = true;
 
-const code = window.location.href.split('/')[window.location.href.split('/').length - 1];
+const code = window.location.href.split('/')[window.location.href.split('/').length - 1].toUpperCase().replace('TMP-', 'tmp-');
 
 (document.getElementById('code') as HTMLElement).innerHTML = code;
 

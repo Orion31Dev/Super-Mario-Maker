@@ -32,7 +32,9 @@ export class Level {
     let row = this.rows[y];
     if (x >= row.blocks.length) return genBlock(x, y, BlockType.Platform);
 
-    return genBlock(row.blocks[x].x, row.blocks[x].y, row.blocks[x].type); // idk sometimes it returns an object and not a block
+    // idk sometimes it returns an object and not a block so to make sure it's a block I recreate the obj
+    if (row.blocks[x].active) return genBlock(row.blocks[x].x, row.blocks[x].y, row.blocks[x].type).getActivatedState();
+    else return genBlock(row.blocks[x].x, row.blocks[x].y, row.blocks[x].type); 
   }
 }
 

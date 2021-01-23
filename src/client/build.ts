@@ -1,7 +1,7 @@
-import { Block, BlockType, genBlock } from '../shared/blocks';
+import { BlockType, genBlock } from '../shared/blocks';
 import { Level } from '../shared/level';
 import { canvas, step, ctx, renderLevel, renderGrid, renderImages, imgQueue } from './canvas';
-import { bound, clamp, cx, cy, SCALE, t, TILE, time } from './const';
+import { bound, cx, cy, SCALE, t, TILE, time, updateDimensions } from './const';
 import { Camera, Entity } from './entity';
 import { uploadLevelTemp } from './sockets';
 
@@ -14,12 +14,15 @@ const coords = document.getElementById('coords') as HTMLElement;
 
 let level = new Level();
 
+updateDimensions();
+
 let camera = new Camera();
 let player = new Entity();
 player.width = player.height = TILE * 0.7;
 
 player.x = 4.15 * TILE;
 player.y = 13.15 * TILE;
+
 camera.x = player.x;
 camera.y = player.y;
 
@@ -75,7 +78,7 @@ const updateMouseCoords = () => {
 
   if (mousedown) {
     if (mouseBlockX === t(player.x) && mouseBlockY === t(player.y)) return;
-    
+
     level.rows[mouseBlockY].blocks[mouseBlockX].type = selectedBlock;
   }
 };
@@ -99,7 +102,14 @@ const update = (dt: number) => {
 };
 
 const render = () => {
+  if (!ctx) return;
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.beginPath();
+  ctx.fillStyle = '#22ff99'; // 99 alpha (hexadecimal)
+  ctx.rect(100, 100, 200, 200);
+  ctx.fill();
 
   renderLevel(level, camera);
   renderImages();
@@ -109,7 +119,7 @@ const render = () => {
 
   if (mouseBlockX !== t(player.x) || mouseBlockY !== t(player.y)) {
     if (style instanceof HTMLImageElement) {
-      imgQueue.push({ img: style, x: cx((mouseBlockX + .5) * TILE, camera), y: cy((mouseBlockY + .5) * TILE, camera), opacity: .5 });
+      imgQueue.push({ img: style, x: cx((mouseBlockX + 0.5) * TILE, camera), y: cy((mouseBlockY + 0.5) * TILE, camera), opacity: 0.5 });
     } else {
       ctx.beginPath();
       ctx.fillStyle = shade(style, -15) + '99'; // 99 alpha (hexadecimal)

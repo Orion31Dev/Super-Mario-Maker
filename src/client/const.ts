@@ -1,4 +1,5 @@
-import { Camera } from './entity';
+import { MAP } from '../shared/level';
+import { Camera, Entity } from './entity';
 
 export const DEBUG_DRAW_COLLISION_TRACERS = false;
 
@@ -11,6 +12,28 @@ export const GRAVITY = 0.5 * TILE, // default gravity
   ACCEL = TILE / 2,
   FRICTION = TILE,
   IMPULSE = 15 * TILE; // default player jump impulse
+
+export let width: number, height: number;
+width = height = 0;
+
+export const updateDimensions = () => {
+  width = MAP.w * TILE;
+  height = MAP.h * TILE;
+};
+
+export let blockActivationQueue: { x: number; y: number }[] = [];
+
+// Avoid importing entity, which imports canvas, which will crash in index.html
+export let entities: Entity[] = [];
+export let entityDeletionQueue: { x: number, y: number }[] = [];
+
+export const setEntities = (newEntities: Entity[]) => {
+  entities = newEntities;
+}
+
+export const resetBlockActivationQueue = () => {
+  blockActivationQueue = [];
+};
 
 export const time = () => {
   return window.performance && window.performance.now ? window.performance.now() : new Date().getTime();

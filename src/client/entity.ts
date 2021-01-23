@@ -1,9 +1,24 @@
-import { isForOfStatement } from 'typescript';
 import { BlockType } from '../shared/blocks';
 import { Level } from '../shared/level';
-import { canvas, ctx, height, width } from './canvas';
-import { AABB, Direction, Ray, raycast } from './collision';
-import { ACCEL, clamp, cx, cy, DEBUG_DRAW_COLLISION_TRACERS, FRICTION, GRAVITY, IMPULSE, MAXDX, MAXDY, t, TILE } from './const';
+import { canvas, ctx } from './canvas';
+import { AABB, Direction, Ray, raycast, raycastEntities } from './collision';
+import {
+  ACCEL,
+  clamp,
+  cx,
+  cy,
+  DEBUG_DRAW_COLLISION_TRACERS,
+  FRICTION,
+  GRAVITY,
+  IMPULSE,
+  MAXDX,
+  MAXDY,
+  t,
+  TILE,
+  height,
+  width,
+  entityDeletionQueue,
+} from './const';
 
 export class Entity {
   x: number;
@@ -22,6 +37,13 @@ export class Entity {
   height: number;
   omnipotent: boolean; // subject to collision and gravity
   onGround: boolean;
+  drawOffsetY: number;
+
+  checkEntityCollides: boolean;
+
+  maxjumps: number;
+  jumps: number;
+
   onWin: Function | null;
 
   constructor() {
@@ -40,13 +62,27 @@ export class Entity {
     this.omnipotent = false;
     this.onGround = false;
 
+    this.maxjumps = 1;
+    this.jumps = 0;
+
+    this.checkEntityCollides = false;
+
+    this.drawOffsetY = 0;
+
     this.width = TILE;
     this.height = TILE;
 
     this.onWin = null;
   }
 
-  update(dt: number, level: Level) {
+  getStyle(): string | HTMLImageElement {
+    if (this.jumps == 2) return '#a050ff';
+    if (this.jumps == 1) return '#ff9900';
+
+    return '#ff0950';
+  }
+
+  update(dt: number, level: Level, entities?: Entity[]) {
     let ddx = this.dx,
       ddy = this.dy + (this.omnipotent ? 0 : GRAVITY);
 
@@ -91,7 +127,7 @@ export class Entity {
       yDt = true;
 
     if (!this.omnipotent) {
-      let distances = this.getCollisions(level);
+      let distances = this.getCollisions(level, entities);
 
       let xs = Math.sign(ddx);
       let ys = Math.sign(ddy);
@@ -127,6 +163,7 @@ export class Entity {
     }
 
     if (this.onGround && ddy > 0) ddy = 0; // Prevent Gravity from accumulating
+    if (this.onGround) this.jumps = this.maxjumps;
 
     this.dx = ddx;
     this.dy = ddy;
@@ -136,11 +173,12 @@ export class Entity {
   }
 
   jump() {
-    if (!this.onGround) return;
+    if (this.jumps <= 0) return;
     this.dy = -IMPULSE;
+    this.jumps--;
   }
 
-  getCollisions(level: Level) {
+  getCollisions(level: Level, entities?: Entity[]) {
     var off = 0.001;
 
     var leftRays = [
@@ -185,10 +223,10 @@ export class Entity {
     });
 
     let collisions = {
-      left: leftRays.map((r) => raycast(r, barriers)).filter((r) => r),
-      right: rightRays.map((r) => raycast(r, barriers)).filter((r) => r),
-      top: topRays.map((r) => raycast(r, barriers)).filter((r) => r),
-      bottom: bottomRays.map((r) => raycast(r, barriers)).filter((r) => r),
+      left: leftRays.map((r) => raycast(r, barriers, false)).filter((r) => r),
+      right: rightRays.map((r) => raycast(r, barriers, false)).filter((r) => r),
+      top: topRays.map((r) => raycast(r, barriers, true)).filter((r) => r),
+      bottom: bottomRays.map((r) => raycast(r, barriers, false)).filter((r) => r),
     };
 
     let distances = {
@@ -204,10 +242,10 @@ export class Entity {
       });
 
       let winCollisions = {
-        left: leftRays.map((r) => raycast(r, winBlocks)).filter((r) => r),
-        right: rightRays.map((r) => raycast(r, winBlocks)).filter((r) => r),
-        top: topRays.map((r) => raycast(r, winBlocks)).filter((r) => r),
-        bottom: bottomRays.map((r) => raycast(r, winBlocks)).filter((r) => r),
+        left: leftRays.map((r) => raycast(r, winBlocks, false)).filter((r) => r),
+        right: rightRays.map((r) => raycast(r, winBlocks, false)).filter((r) => r),
+        top: topRays.map((r) => raycast(r, winBlocks, false)).filter((r) => r),
+        bottom: bottomRays.map((r) => raycast(r, winBlocks, false)).filter((r) => r),
       };
 
       let winDistances = [
@@ -217,16 +255,52 @@ export class Entity {
         Math.min(...winCollisions.bottom.map((x) => x.distance)),
       ];
 
-      console.log(winDistances);
-
       if (Math.min(...winDistances) <= 1 || level.at(t(this.x), t(this.y)).type === BlockType.Victory) {
         this.onWin();
+      }
+    }
+
+    if (this.checkEntityCollides && entities) {
+      let entityCollisions = [
+        leftRays.map((r) => raycastEntities(r, entities)).filter((r) => r),
+        rightRays.map((r) => raycastEntities(r, entities)).filter((r) => r),
+        topRays.map((r) => raycastEntities(r, entities)).filter((r) => r),
+        bottomRays.map((r) => raycastEntities(r, entities)).filter((r) => r),
+      ];
+
+      for (let a of entityCollisions) {
+        a.forEach(e => {
+          if (e.distance > 1) return;
+          
+          if (e.entity instanceof Mushroom) this.maxjumps = 2;
+          entityDeletionQueue.push(e.entity);
+        });
       }
     }
 
     if (DEBUG_DRAW_COLLISION_TRACERS) debugDistances = distances;
 
     return distances;
+  }
+}
+
+export class Mushroom extends Entity {
+  constructor() {
+    super();
+
+    this.dy = 30 * TILE;
+    this.dx = -7 * TILE;
+
+    this.friction = TILE / 10;
+
+    this.drawOffsetY = TILE * 0.4;
+  }
+
+  getStyle() {
+    let img = new Image();
+    img.src = '/images/mushroom.png';
+
+    return img;
   }
 }
 
@@ -279,6 +353,8 @@ export let debugDistances: { left: number; right: number; bottom: number; top: n
 export let rayQueue: Ray[] = [];
 export let aabbQueue: AABB[] = [];
 export function flushDebugDrawQueues(camera: Camera) {
+  if (!ctx) return;
+
   if (!debugDistances || !debugDistances.left) return;
   if (debugDistances.left === Infinity) debugDistances.left = 10000;
   if (debugDistances.right === Infinity) debugDistances.right = 10000;
@@ -286,6 +362,8 @@ export function flushDebugDrawQueues(camera: Camera) {
   if (debugDistances.bottom === Infinity) debugDistances.bottom = 10000;
 
   rayQueue.map(function (ray) {
+    if (!ctx) return; // just bc typescript is throwing an error even tho it cannot be null here
+
     ctx.beginPath();
     let x = cx(ray.origin.x, camera);
     let y = cy(ray.origin.y, camera);
@@ -315,6 +393,8 @@ export function flushDebugDrawQueues(camera: Camera) {
   });
 
   aabbQueue.forEach((b) => {
+    if (!ctx) return; // just bc typescript is throwing an error even tho it cannot be null here
+
     ctx.beginPath();
     ctx.rect(cx(b.x, camera), cy(b.y, camera), TILE, TILE);
     ctx.strokeStyle = '#000000';

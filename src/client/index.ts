@@ -9,7 +9,7 @@ let code = "";
 play?.addEventListener('click', () => {
   if (/^[a-zA-Z0-9]{5}$/.test(input.value)) {
     levelExists(input.value.toUpperCase(), existsCallback);
-    code = input.value;
+    code = input.value.toUpperCase();
   } 
   else shakeInput();
 });

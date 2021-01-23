@@ -1,7 +1,20 @@
 import { Level } from '../shared/level';
-import { canvas, step, ctx, renderLevel, renderImages } from './canvas';
-import { animateFlexContainers, cx, cy, DEBUG_DRAW_COLLISION_TRACERS, TILE, time } from './const';
+import {
+  animateFlexContainers,
+  blockActivationQueue,
+  cx,
+  cy,
+  DEBUG_DRAW_COLLISION_TRACERS,
+  entities,
+  entityDeletionQueue,
+  resetBlockActivationQueue,
+  setEntities,
+  TILE,
+  time,
+  updateDimensions,
+} from './const';
 import { Camera, Entity, flushDebugDrawQueues } from './entity';
+import { canvas, step, ctx, renderLevel, renderImages, imgQueue } from './canvas';
 import { getLevel, levelExists, saveLevel } from './sockets';
 
 const endScreen = document.querySelector('.cont-end') as HTMLElement;
@@ -56,21 +69,52 @@ const frame = () => {
 
 const update = (dt: number) => {
   camera.updateAndFollow(dt, level, player);
-  player.update(dt, level);
+  player.update(dt, level, entities);
+
+  entityDeletionQueue.forEach(e => {
+    setEntities(entities.filter(ent => (ent.x != e.x && ent.y != e.y)));
+  });
+
+  entities.forEach((e) => {
+    e.update(dt, level);
+  });
+
+  for (let c of blockActivationQueue) {
+    level.at(c.x, c.y).activationAction();
+    level.rows[c.y].blocks[c.x].active = true;
+  }
+  resetBlockActivationQueue();
 
   if (player.y > (level.sizeY + 4) * TILE) endGame();
 };
 
 const render = () => {
+  if (!ctx) return;
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   renderLevel(level, camera);
+
+  entities.forEach((e) => {
+    if (!ctx) return; // just bc typescript is throwing an error even though ctx cannot be null here
+
+    let style = e.getStyle();
+    if (style instanceof HTMLImageElement) {
+      imgQueue.push({ img: style, x: cx(e.x, camera), y: cy(e.y, camera) + e.drawOffsetY, opacity: 1 });
+    } else {
+      ctx.beginPath();
+      ctx.rect(cx(e.x, camera), cy(e.y, camera), e.width, e.height);
+      ctx.fillStyle = style;
+      ctx.fill();
+    }
+  });
+
   renderImages();
 
   // Player
   ctx.beginPath();
   ctx.rect(cx(player.x, camera), cy(player.y, camera), player.width, player.height);
-  ctx.fillStyle = 'orange';
+  ctx.fillStyle = player.getStyle() as string;
   ctx.fill();
 
   if (DEBUG_DRAW_COLLISION_TRACERS) flushDebugDrawQueues(camera);
@@ -92,6 +136,7 @@ const resetGame = () => {
   player.x = 4.15 * TILE;
   player.y = 13.15 * TILE;
   player.width = player.height = TILE * 0.7;
+  player.checkEntityCollides = true;
 
   camera.x = player.x;
   camera.y = player.y;
@@ -100,7 +145,7 @@ const resetGame = () => {
   levelExists(code, (b: boolean) => {
     if (firstLoad) {
       loadingScreen.style.transform = 'translateY(-100%)';
-      setTimeout(() => loadingScreen.style.visibility = 'hidden', 500);
+      setTimeout(() => (loadingScreen.style.visibility = 'hidden'), 500);
       firstLoad = false;
     }
     if (!b) {
@@ -114,6 +159,7 @@ const resetGame = () => {
   // Load level
   getLevel(code, (l: Level) => {
     level = l;
+    updateDimensions();
   });
 
   endScreen.classList.remove('active');
@@ -141,6 +187,9 @@ window.addEventListener('keydown', (e) => {
       break;
     case ' ':
       player.jump();
+      break;
+    case 'f':
+      console.log(level.at(13, 11));
   }
 });
 

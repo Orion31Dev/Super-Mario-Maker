@@ -40,7 +40,7 @@ module.exports = [
   // ---------- WEB -----------
   // --------------------------
   {
-    mode: 'production',
+    mode: 'development',
     entry: {
       build: './src/client/build.ts',
       play: './src/client/play.ts',

@@ -1,3 +1,6 @@
+import { entities, TILE } from '../client/const';
+import { Mushroom } from '../client/entity';
+
 export enum BlockType {
   Platform,
   None,
@@ -10,16 +13,25 @@ export class Block {
   x: number;
   y: number;
 
+  active: boolean;
+
   constructor(x: number, y: number) {
     this.type = BlockType.None;
     this.x = x;
     this.y = y;
-  }
 
-  action() {}
+    this.active = false;
+  }
 
   getStyle(): string | HTMLImageElement {
     return '#55ddff';
+  }
+
+  activationAction() {}
+
+  getActivatedState() {
+    this.active = true;
+    return this;
   }
 
   getBkgStyle(): null | string {
@@ -38,6 +50,7 @@ export class PlatformBlock extends Block {
   }
 
   getStyle() {
+    if (this.active) return '#fff000';
     return (this.x + this.y) % 2 === 0 ? '#55ff55' : '#33bb33';
   }
 
@@ -54,12 +67,25 @@ export class ItemBlock extends Block {
 
   getStyle() {
     let img = new Image();
-    img.src = '/images/questionmark.png'
+
+    if (this.active) img.src = '/images/usedblock.png';
+    else img.src = '/images/questionmark.png';
+
     return img;
   }
 
   passable() {
     return false;
+  }
+
+  activationAction() {
+    if (this.active) return;
+    let mushroom = new Mushroom();
+    mushroom.x = this.x * TILE;
+    mushroom.y = (this.y - 1) * TILE;
+    
+
+    entities.push(mushroom);
   }
 }
 
